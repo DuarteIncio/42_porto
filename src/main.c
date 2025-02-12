@@ -3,41 +3,47 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dde-alme <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: tsodre-p <tsodre-p@student.42porto.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/05/28 11:39:25 by dde-alme          #+#    #+#             */
-/*   Updated: 2024/05/29 14:14:34 by dde-alme         ###   ########.fr       */
+/*   Created: 2024/10/02 11:17:47 by tsodre-p          #+#    #+#             */
+/*   Updated: 2025/01/02 20:28:53 by tsodre-p         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-/*
- * I can have 2 prompts:
- * 	./fractol mandelbrot
- * 	./fractol julia <real> <imaginary>
- *
- * The main function is a TL;DR of your application
+#include "../headers/minishell.h"
+
+/**
+ * The use of a global variable like g_exit_status allows the exit status to be
+ * accessed
+ * and modified from different parts of the program, including signal handlers
+ * or functions that handle command execution. It provides a way to communicate
+ * the exit status between different components of the minishell program.
  */
-#include "fractol.h"
+int	g_exit_status = 0;
 
-int	main(int ac, char **av)
+int	main(int ac, char **av, char **env)
 {
-	t_fractal	fractal;
+	int	i;
 
-	if (ac == 2 && !ft_strncmp(av[1], "mandelbrot", 10)
-		|| ac == 4 && !ft_strncmp(av[1], "julia", 5))
-	{
-		fractal.name = av[1];
-		//Prompt correct = Kick off the application;
-		//1)
-		fractal_init(&fractal);
-		//2)
-		fractal_render(&fractal);
-		//3)
-		mlx_loop(fractal.mlx);
-	}
+	(void)av;
+	if (ac > 1)
+		printf("minishell: wrong number of arguments\n");
 	else
 	{
-		ft_putstr_fd(ERROR_MESSAGE, STDERR_FILENO);
-		exit(EXIT_FAILURE);
+		ms()->env = init_env(env);
+		ms()->export = get_export(env);
+		while (1)
+		{
+			i = 0;
+			signal_handling();
+			i = read_input();
+			if (!i)
+				continue ;
+			else if (i == -1)
+				break ;
+			execute();
+		}
+		return (free_all(), ft_putstr("exit\n"), 0);
 	}
+	return (0);
 }

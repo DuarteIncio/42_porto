@@ -3,77 +3,107 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: dde-alme <marvin@42.fr>                    +#+  +:+       +#+         #
+#    By: tsodre-p <tsodre-p@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2024/05/22 11:22:49 by dde-alme          #+#    #+#              #
-#    Updated: 2024/06/05 10:59:28 by dde-alme         ###   ########.fr        #
+#    Created: 2024/10/02 11:24:16 by tsodre-p          #+#    #+#              #
+#    Updated: 2025/01/03 10:04:56 by tsodre-p         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
-NAME	=	fractol
 
-CC	=	cc
-CCFLAGS	=	-Werror - Wextra -Wall
+NAME = minishell
+LIBFT = libft.a
 
-MLX_PATH	= libraries/minilibx-linux/
-MLX_NAME	= libmlx_Linux.a
-MLX		= 	$(MLX_PATH)$(MLX_NAME)
+#----------DIRS----------#
 
-LIBFT_PATH	= libraries/libft/
-LIBFT_NAME	= libft.a
-LIBFT		= 	$(LIBFT_PATH)$(LIBFT_NAME)
+SRCDIR = ./src/
+LIBFTDIR = ./libft/
+HEADERDIR = ./headers/
 
-INC		= -I ./includes/\
-		  -I ./$(LIBFT_PATH)\
-		  -I ./$(MLX_PATH)
+SRC =	src/main.c \
+		src/ms.c \
+		src/exec_utils_2.c \
+		src/exec_utils.c \
+		src/check_builtins.c \
+		src/exec_redirects_utils.c \
+		src/exec_redirects.c \
+		src/exec.c \
+		src/expand_args_utils.c \
+		src/expand_args_2.c \
+		src/expand_args.c \
+		src/free.c \
+		src/get_env.c \
+		src/get_export.c \
+		src/heredoc_utils.c \
+		src/heredoc.c \
+		src/input_errors.c \
+		src/input_handling.c \
+		src/input_helpers.c \
+		src/input_prterr.c \
+		src/input_utils_2.c \
+		src/input_utils.c \
+		src/pipes.c \
+		src/prompt.c \
+		src/quotes.c \
+		src/redirects.c \
+		src/signals.c \
+		src/splitter.c \
+		src/utils.c \
+		src/builtins/cd_utils.c \
+		src/builtins/cd.c \
+		src/builtins/echo.c \
+		src/builtins/env.c \
+		src/builtins/exit_utils.c \
+		src/builtins/exit.c \
+		src/builtins/export_utils.c \
+		src/builtins/export.c \
+		src/builtins/pwd.c \
+		src/builtins/unset.c \
 
-SRC_PATH	= src/
-SRC		= main.c \
-		  init.c \
-		  render.c \
-		  math_utils.c \
-		  events.c \
+#----------COMMANDS----------#
 
-SRCS		= $(addprefix $(SRC_PATH), $(SRC))
+CC = cc
+CFLAGS = -Wall -Werror -Wextra -g
+AR = ar rcs
+RM = rm -rf
 
-OBJ_PATH	= obj/
-OBJ		= $(SRC:.c=.o)
-OBJS		= $(addprefix $(OBJ_PATH), $(OBJ))
+OBJ = ${SRC:.c=.o}
 
-all:	$(MLX) $(LIBFT) $(NAME)
+#----------COLORS----------#
+GREEN = \033[0;32m
+YELLOW = \033[0;33m
+CYAN = \033[1;36m
 
-$(OBJ_PATH)%.o: $(SRC_PATH)%.c | $(OBJ_PATH)
-	@$(CC) $(CFLAGS) -c $< -o $@ $(INC)
+#--------ART & TEXT--------#
+MS = " [ Compiled Minishell ] "
+LFT = " [ Compiled Libft ] "
 
-$(OBJS): $(OBJ_PATH)
+#----------RULES----------#
+.c.o:
+#@$(CC) $(CFLAGS) -c -I$(HEADERDIR) $< -o ${<:.c=.o}
+			@mkdir -p bin/$(dir $<)
+			@$(CC) $(CFLAGS) -c -I$(HEADERDIR) $< -o bin/$*.o
 
-$(OBJ_PATH):
-	@mkdir -p $(OBJ_PATH)
-
-$(MLX):
-	@echo "Making MinilibX..."
-	@make -sC $(MLX_PATH)
+all:		$(NAME)
+			@echo "$(GREEN)$(MS)"
+			@echo "$(CYAN) [ Generated: $(NAME) ] "
 
 $(LIBFT):
-	@echo "Making libft..."
-	@make -sC $(LIBFT_PATH)
+			@cd $(LIBFTDIR) && $(MAKE) -s
+			@echo "$(YELLOW)$(LFT)"
 
-$(NAME): $(OBJS)
-		@echo "Compiling fractol..."
-		@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(MLX) $(LIBFT) $(INC)\
-		-L$(MLX_PATH) -lmlx_Linux -L$(LIBFT_PATH) -lft -lXext -lX11 -lm
-		@echo "Fractol is ready!"
+$(NAME):	$(OBJ) $(LIBFT)
+			@$(CC) $(CFLAGS) $(OBJ:%=bin/%) -lreadline $(LIBFTDIR)$(LIBFT) -o $(NAME)
 
 clean:
-	@echo "Removing .o object files..."
-	@rm -rf $(OBJ_PATH)
-	@make clean -C $(MLX_PATH)
-	@make clean -C $(LIBFT_PATH)
+			@$(RM) $(OBJ:%=bin/%) $(OBJ_CHECKER)
+			@if [ -d "bin/src" ]; then rm -rf bin/src; fi
+			@if [ -d "bin" ]; then rm -rf bin; fi
+			@cd $(LIBFTDIR) && $(MAKE) -s clean
 
-fclean: clean
-	@echo "Removing fractol..."
-	@rm -rf $(NAME)
-	@make fclean -C $(LIBFT_PATH) $(LIBFT_NAME)
+fclean:		clean
+			@$(RM) $(NAME) $(BONUS) $(LIBFT)
+			@cd $(LIBFTDIR) && $(MAKE) -s fclean
 
-re: fclean all
+#aclean:		all clean
 
-.PHONY:		all clean fclean re
+re:			fclean all
